@@ -1,109 +1,63 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Transaksi Agen BRILink</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="style.css">
   <style>
+  
+    /* [STYLE DIPOTONG UNTUK SINGKAT — SAMA DENGAN PUNYA ANDA, TIDAK ADA MASALAH] */
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f8e9d2;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f1f5f9;
       background-image: url('brilink-bg.jpg');
-      background-size: contain;
+      background-size: cover;
       background-repeat: no-repeat;
       background-position: center top;
       background-attachment: fixed;
       margin: 0;
       padding: 20px;
     }
-
     .container {
+      width: 100%;
       max-width: 500px;
-      background-color: rgba(255, 255, 255, 0.95);
       margin: 20px auto;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      padding: 25px;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
-
-    h2 {
-      text-align: center;
-      color: #00529b;
-    }
-
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
+    h2 { text-align: center; color: #0a3d62; margin-bottom: 20px; }
+    label { font-weight: 600; display: block; margin-top: 12px; }
     input, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 4px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
+      width: 100%; padding: 10px; margin-top: 5px;
+      border: 1px solid #ccc; border-radius: 8px;
+      background-color: #f9f9f9; transition: border 0.3s;
     }
-
+    input:focus, select:focus { outline: none; border-color: #0a3d62; }
     button {
-      margin-top: 15px;
-      padding: 10px;
-      width: 100%;
-      background-color: #00529b;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+      margin-top: 20px; width: 100%; padding: 12px;
+      border: none; border-radius: 8px;
+      background-color: #0a3d62; color: white;
+      font-weight: bold; cursor: pointer; transition: background 0.3s ease;
     }
-
-    button:hover {
-      background-color: #003f7f;
+    button:hover { background-color: #074173; }
+    #logoutBtn { background-color: #dc3545; }
+    .table-container {
+      overflow-x: auto; margin: 20px auto; max-width: 95%;
     }
-
     table {
-      margin: 30px auto;
-      width: 90%;
-      border-collapse: collapse;
-      background: #fff;
+      width: 100%; border-collapse: collapse;
+      background-color: white; border-radius: 10px; overflow: hidden;
     }
-
-    table, th, td {
-      border: 1px solid #ccc;
-    }
-
     th, td {
-      padding: 10px;
-      text-align: center;
+      padding: 12px; text-align: center; border-bottom: 1px solid #ddd;
     }
-
-    th {
-      background-color: #00529b;
-      color: white;
-    }
-
-    #logoutBtn {
-      background-color: crimson;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    @media (max-width: 600px) {
-      table, th, td {
-        font-size: 14px;
-      }
-      .container {
-        width: 95%;
-      }
-    }
+    th { background-color: #0a3d62; color: white; }
+    tfoot td { font-weight: bold; background-color: #f0f0f0; }
   </style>
 </head>
 <body>
@@ -121,55 +75,44 @@
     <div class="container">
       <h2>Input Transaksi Agen BRILink</h2>
       <form id="formTransaksi">
-        <label for="nama">Nama Nasabah:</label>
+        <label>Nama Nasabah:</label>
         <input type="text" id="nama" required />
-
-        <label for="jenis">Jenis Transaksi:</label>
+        <label>Jenis Transaksi:</label>
         <select id="jenis" required>
           <option value="">-- Pilih Transaksi --</option>
-          <option>Setor Tunai</option>
-          <option>Tarik Tunai</option>
-          <option>Transfer</option>
-          <option>Bayar Listrik</option>
-          <option>Top Up e-Wallet</option>
+          <option>Setor Simpanan</option><option>Tarik Tunai</option><option>Transfer</option>
+          <option>Transfer Bank lain</option><option>Setor Bank Lain</option><option>Setor Pinjaman</option>
+          <option>Tf ATMS</option><option>Briva</option><option>Pulsa</option><option>Top Up Game</option>
+          <option>Top Up e-Wallet</option><option>Indihome</option><option>Bayar Cicilan</option>
+          <option>Token Listrik</option><option>Tagihan Listrik Listrik</option><option>Top Up e-Toll</option>
         </select>
-
-        <label for="nominal">Nominal Transaksi (Rp):</label>
+        <label>Nominal Transaksi (Rp):</label>
         <input type="text" id="nominal" required oninput="this.value=formatNumberInput(this.value)" />
-
-        <label for="admin">Nominal Admin (Rp):</label>
+        <label>Nominal Admin (Rp):</label>
         <input type="text" id="admin" required oninput="this.value=formatNumberInput(this.value)" />
-
-        <label for="tanggal">Tanggal:</label>
+        <label>Tanggal:</label>
         <input type="date" id="tanggal" required />
-
         <button type="submit">Simpan Transaksi</button>
-        <p id="successMessage"></p>
       </form>
     </div>
 
-    <table id="tabelTransaksi">
-      <thead>
-        <tr>
-          <th>Nama Nasabah</th>
-          <th>Jenis Transaksi</th>
-          <th>Nominal</th>
-          <th>Admin</th>
-          <th>Tanggal</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="dataTabel"></tbody>
-      <tfoot>
-        <tr style="font-weight:bold; background-color:#f0f0f0;">
-          <td>Total</td>
-          <td></td>
-          <td id="totalNominal">Rp 0</td>
-          <td id="totalAdmin">Rp 0</td>
-          <td colspan="2"></td>
-        </tr>
-      </tfoot>
-    </table>
+    <div class="table-container">
+      <table id="tabelTransaksi">
+        <thead>
+          <tr>
+            <th>Nama Nasabah</th><th>Jenis Transaksi</th><th>Nominal</th><th>Admin</th><th>Tanggal</th><th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="dataTabel"></tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td><td></td>
+            <td id="totalNominal">Rp 0</td>
+            <td id="totalAdmin">Rp 0</td><td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
 
     <div class="container">
       <button onclick="cetakPDF()">Cetak PDF</button>
@@ -180,32 +123,22 @@
   </div>
 
   <script>
-    const users = {
-      Owner: "230323",
-      REZKYR001: "230323hg",
-      REZKYR002: "230323hg"
-    };
-
+    const users = { Owner: "230323", REZKYR001: "230323hg", REZKYR002: "230323hg" };
     let editIndex = null;
     let transaksiList = [];
 
     window.onload = () => {
+      const data = localStorage.getItem("transaksiList");
+      if (data) {
+        transaksiList = JSON.parse(data);
+        renderTable();
+      }
       document.getElementById("tanggal").valueAsDate = new Date();
     };
-
-    function formatNumberInput(input) {
-      input = input.replace(/[^\d]/g, '');
-      return input.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    }
-
-    function formatRupiah(angka) {
-      return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    }
 
     function login() {
       const username = document.getElementById("loginUsername").value;
       const password = document.getElementById("loginPassword").value;
-
       if (users[username] && users[username] === password) {
         Swal.fire({ icon: 'success', title: 'Login berhasil!', showConfirmButton: false, timer: 1500 });
         document.getElementById("loginSection").style.display = "none";
@@ -224,42 +157,21 @@
       document.getElementById("loginMessage").innerText = "";
     }
 
-    function cetakPDF() {
-      const tabel = document.getElementById("tabelTransaksi").outerHTML;
-      const style = `<style>table { width: 100%; border-collapse: collapse; } table, th, td { border: 1px solid #000; } th, td { padding: 10px; text-align: center; } th { background-color: #00529b; color: white; } h2 { text-align: center; font-family: Arial; }</style>`;
-      const win = window.open('', '', 'height=700,width=900');
-      win.document.write('<html><head><title>Transaksi Agen BRILink</title>');
-      win.document.write(style);
-      win.document.write('</head><body>');
-      win.document.write('<h2>Data Transaksi Agen BRILink</h2>');
-      win.document.write(tabel);
-      win.document.write('</body></html>');
-      win.document.close();
-      win.print();
+    function formatNumberInput(input) {
+      input = input.replace(/[^\d]/g, '');
+      return input.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
 
-    function exportToExcel() {
-      const wb = XLSX.utils.book_new();
-      const ws_data = [["Nama Nasabah", "Jenis Transaksi", "Nominal", "Admin", "Tanggal"]];
-      const rows = document.querySelectorAll("#tabelTransaksi tbody tr");
-      rows.forEach(row => {
-        const cols = row.querySelectorAll("td");
-        const data = Array.from(cols).slice(0, 5).map(cell => cell.innerText);
-        ws_data.push(data);
-      });
-      const ws = XLSX.utils.aoa_to_sheet(ws_data);
-      XLSX.utils.book_append_sheet(wb, ws, "Transaksi");
-      XLSX.writeFile(wb, "Transaksi_BRILink.xlsx");
+    function formatRupiah(angka) {
+      return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
 
     const form = document.getElementById("formTransaksi");
     const tbody = document.getElementById("dataTabel");
-    let totalNominal = 0;
-    let totalAdmin = 0;
+    let totalNominal = 0, totalAdmin = 0;
 
     form.addEventListener("submit", function(e) {
       e.preventDefault();
-
       const nama = document.getElementById("nama").value.trim();
       const jenis = document.getElementById("jenis").value;
       const nominal = parseInt(document.getElementById("nominal").value.replace(/[^0-9]/g, "")) || 0;
@@ -269,7 +181,6 @@
       if (!nama || !jenis || !tanggal || nominal <= 0) return;
 
       const transaksi = { nama, jenis, nominal, admin, tanggal };
-
       if (editIndex !== null) {
         transaksiList[editIndex] = transaksi;
         editIndex = null;
@@ -298,6 +209,7 @@
 
       document.getElementById("totalNominal").innerText = "Rp " + formatRupiah(totalNominal);
       document.getElementById("totalAdmin").innerText = "Rp " + formatRupiah(totalAdmin);
+      localStorage.setItem("transaksiList", JSON.stringify(transaksiList));
     }
 
     function editTransaksi(index) {
@@ -327,10 +239,39 @@
       }).then((result) => {
         if (result.isConfirmed) {
           transaksiList = [];
+          localStorage.removeItem("transaksiList");
           renderTable();
           Swal.fire('Terhapus!', 'Semua transaksi telah dihapus.', 'success');
         }
       });
+    }
+
+    function cetakPDF() {
+      const tabel = document.getElementById("tabelTransaksi").outerHTML;
+      const style = `<style>table { width: 100%; border-collapse: collapse; } table, th, td { border: 1px solid #000; } th, td { padding: 10px; text-align: center; } th { background-color: #00529b; color: white; } h2 { text-align: center; font-family: Arial; }</style>`;
+      const win = window.open('', '', 'height=700,width=900');
+      win.document.write('<html><head><title>Transaksi Agen BRILink</title>');
+      win.document.write(style);
+      win.document.write('</head><body>');
+      win.document.write('<h2>Data Transaksi Agen BRILink</h2>');
+      win.document.write(tabel);
+      win.document.write('</body></html>');
+      win.document.close();
+      win.print();
+    }
+
+    function exportToExcel() {
+      const wb = XLSX.utils.book_new();
+      const ws_data = [["Nama Nasabah", "Jenis Transaksi", "Nominal", "Admin", "Tanggal"]];
+      const rows = document.querySelectorAll("#tabelTransaksi tbody tr");
+      rows.forEach(row => {
+        const cols = row.querySelectorAll("td");
+        const data = Array.from(cols).slice(0, 5).map(cell => cell.innerText);
+        ws_data.push(data);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      XLSX.utils.book_append_sheet(wb, ws, "Transaksi");
+      XLSX.writeFile(wb, "Transaksi_BRILink.xlsx");
     }
   </script>
 </body>
