@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rekapan Transaksi Agen BRILink — Firebase Realtime</title>
+<style>
+:root{
+  --navy:#002366;
+  --border:#dcdfe3;
+  --bg:#eef2f7;
+  --text:#333;
+}
+*{box-sizing:border-box}
+body{font-family:Arial, Helvetica, sans-serif;margin:0;background:var(--bg);color:var(--text);} 
+
+/* HEADER */
+.header{
+  background:var(--navy);
+  color:#fff;
+  padding:16px 20px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  position:relative;
+  flex-wrap:wrap;
+}
+.header h2{
+  flex:1 1 340px;
+  text-align:center;
+  margin:0;
+  letter-spacing:.5px;
+}
+#kasirName{margin:0;font-size:14px;opacity:.9;text-align:center;flex:1 1 200px}
+.header-right{ margin-left:auto; display:flex; align-items:center; gap:14px; }
+.saldo-badges{ display:flex; gap:10px; align-items:center; }
+.badge{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.25); padding:8px 12px; border-radius:8px; min-width:160px; }
+.badge small{display:block;opacity:.9}
+.badge b{font-size:18px;display:block;margin-top:2px}
+#logoutBtn{ padding:6px 12px;border:none;border-radius:6px;background:#666;color:#fff;cursor:pointer }
+#logoutBtn:hover{background:#4b4b4b}
+
+/* LAYOUT */
+.container{display:flex;gap:20px;padding:18px}
+.card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px}
+.form-kiri,.form-kanan{flex:1}
+
+/* INPUTS */
+input,select,button{font-size:14px}
+input,select{
+  width:100%;padding:10px;border:1px solid #cfd3d8;border-radius:6px;margin-bottom:10px;outline:none;
+  transition:border .15s ease;
+}
+input:focus,select:focus{border-color:var(--navy)}
+.uppercase{text-transform:uppercase}
+.btn{padding:9px 16px;border:none;border-radius:6px;cursor:pointer;font-weight:700}
+.btn:hover{opacity:.95}
+.tambah-saldo{background:#ff9800;color:#fff;margin-bottom:12px}
+.pdf{background:#b30000;color:#fff}
+.excel{background:#228B22;color:#fff}
+.reset{background:#831a1a;color:#fff}
+.form-buttons{display:flex;gap:10px;margin-top:6px}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #e5e7eb;text-align:center;padding:10px}
+.tabel-transaksi th{background:var(--navy);color:#fff}
+.tabel-transaksi tbody tr:nth-child(even){background:#f9f9f9}
+.footer-buttons{display:flex;justify-content:center;gap:10px;margin:16px 0 26px}
+
+/* LOGIN */
+.slide{display:none}
+#loginSlide{display:block}
+.login-box{max-width:320px;margin:120px auto;padding:24px;background:#fff;border:1px solid var(--border);border-radius:10px;text-align:center}
+
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);padding:60px 16px}
+.modal-content{max-width:380px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;position:relative}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.close{cursor:pointer;font-size:18px;line-height:1}
+@media (max-width:900px){.container{flex-direction:column}}
+
+.rekap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 768px) { .rekap-grid { grid-template-columns: repeat(3, 1fr); } }
+.rekap-item { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.12); text-align: center; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.rekap-item:hover { transform: translateY(-4px); box-shadow: 0 6px 14px rgba(0,0,0,0.18); }
+.rekap-title { font-weight: bold; color: #fff; padding: 8px; font-size: 14px; }
+.rekap-count { font-size: 22px; font-weight: bold; padding: 20px 0; background: #fafafa; }
+.telkomsel .rekap-title { background: #e60000; }
+.byu .rekap-title       { background: #00c4b3; }
+.indosat .rekap-title   { background: #f4c20d; color:#000; }
+.axis .rekap-title      { background: #800080; }
+.xl .rekap-title        { background: #0000cc; }
+.smartfren .rekap-title { background: #ff1493; }
+.tri .rekap-title       { background: #ff00ff; }
+
+/* Background */
+#loginSlide { height: 100vh; display: flex; justify-content: center; align-items: center; background: url('bank-building.jpg') no-repeat center center/cover; position: relative; }
+#loginSlide::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 30, 80, 0.55); z-index: 0; }
+.login-box { position: relative; z-index: 1; background: #fff; padding: 30px 25px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); transform: translateY(40px); opacity: 0; animation: slideIn 0.8s ease forwards; }
+@keyframes slideIn { to { transform: translateY(0); opacity: 1; } }
+.login-box h2 { margin-bottom: 20px; color: #003d99; font-weight: bold; letter-spacing: 1px; }
+.login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; outline: none; font-size: 14px; transition: all 0.3s; }
+.login-box input:focus { border: 1px solid #0055cc; box-shadow: 0 0 6px rgba(0,85,204,0.3); }
+.btn-login { width: 100%; padding: 12px; background: linear-gradient(135deg, #003d99, #0055cc); color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+.btn-login:hover { background: linear-gradient(135deg, #0055cc, #003d99); transform: scale(1.03); }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- ✅ Fallback agar onclick=\"login()\" selalu ada meski module JS belum siap -->
+<script>
+  // Wrapper global; module akan mengisi window.__appLogin
+  window.__appLogin = null;
+  function login(){
+    if (typeof window.__appLogin === 'function') return window.__appLogin();
+    console.warn('Aplikasi belum siap. Mencoba lagi...');
+    setTimeout(login, 50);
+  }
+</script>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="slide active" id="loginSlide">
+  <div class="login-box">
+    <h2>LOGIN</h2>
+    <input type="text" id="username" placeholder="Masukkan Username" />
+    <input type="password" id="password" placeholder="Masukkan Password" />
+    <button class="btn-login" onclick="login()">Login</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="slide" id="mainSlide">
+  <div class="header">
+    <h2>REKAPAN TRANSAKSI AGEN BRILINK</h2>
+    <p id="kasirName">KASIR:</p>
+
+    <div class="header-right">
+      <div class="saldo-badges">
+        <div class="badge">
+          <small>SALDO MESIN</small>
+          <b id="saldoMesinHeader">0</b>
+        </div>
+        <div class="badge">
+          <small>UANG TUNAI</small>
+          <b id="uangTunaiHeader">0</b>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tombol toggle di samping sidebar -->
+  <button id="sideToggle" style="position:fixed; top:90px; left:0px; width:40px; height:40px; background:#666; color:#fff; border:none; border-radius:5px; cursor:pointer; z-index:1000;">&#9776;</button>
+
+  <!-- SIDEBAR MENU -->
+  <div id="sidebar" style="width:180px; background:#dcdcdc; border:1px solid #dcdfe3; border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:10px; height:calc(100vh - 70px); position:fixed; left:-180px; top:90px; transition:left 0.3s; z-index:1000;">
+    <div style="width:100%; background:#0f52a8; border:1px solid #dcdfe3; border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:10px; align-items:center;">
+      <h4 style="margin:0; color:#fff; text-align:center;">TOKO REZKY</h4>
+      <button class="btn" style="width:100%; margin-bottom:6px; background:#ffffff; color:#000000;" onclick="showSlide('dashboardSlide')">DASHBOARD</button>
+      <button class="btn main-menu" style="width:100%; margin-bottom:6px; background:#ffffff; color:#000000;" onclick="toggleSubMenu('subTransaksi')">TRANSAKSI &#9662;</button>
+      <div id="subTransaksi" style="display:none; flex-direction:column; gap:6px; padding-left:10px; width:100%;">
+        <button class="btn" style="width:100%; background:#e0e0e0; color:#000000;" onclick="showSlide('rekapanSlide')">Transaksi Agen</button>
+        <button class="btn" style="width:100%; background:#e0e0e0; color:#000000;" onclick="showSlide('paketDataSlide')">Transaksi Paket Data</button>
+      </div>
+      <button class="btn" style="width:100%; margin-bottom:6px; background:#ffffff; color:#000000;" onclick="showSlide('mutasiSlide')">MUTASI</button>
+      <button class="btn" style="width:100%; margin-top:6px; background:#ffffff; color:#000000;" onclick="logout()">LOGOUT</button>
+    </div>
+  </div>
+
+  <!-- Konten utama -->
+  <div id="mainContent" style="margin-left:0px; transition:margin-left 0.3s;">
+
+    <!-- DASHBOARD -->
+    <div class="slide" id="dashboardSlide">
+      <div class="container" style="flex-wrap:wrap;gap:20px">
+        <div style="width:100%; text-align:right; margin-bottom:12px;">
+          <button class="btn reset" onclick="tutupBuku()">Tutup Buku</button>
+        </div>
+        <div class="card" style="flex:1; min-width:200px; text-align:center;">
+          <h3 style="margin-bottom:12px">NOMINAL TRANSAKSI</h3>
+          <div id="dashTransaksiCards" style="font-size:24px; font-weight:700; color:#002366;">0</div>
+        </div>
+        <div class="card" style="flex:1; min-width:200px; text-align:center;">
+          <h3 style="margin-bottom:12px">NOMINAL ADMIN</h3>
+          <div id="dashAdminCards" style="font-size:24px; font-weight:700; color:#228B22;">0</div>
+        </div>
+      </div>
+
+      <div class="card" style="flex:1 1 100%; margin-top:12px;">
+        <h3 style="text-align:center">Grafik Transaksi Bulanan</h3>
+        <canvas id="chartTransaksi"></canvas>
+      </div>
+      <div class="card" style="flex:1 1 100%; margin-top:12px;">
+        <h3 style="text-align:center">Persentase TRANSFER vs TARIK</h3>
+        <canvas id="chartPieTransaksi"></canvas>
+      </div>
+    </div>
+
+    <!-- REKAPAN TRANSAKSI -->
+    <div class="slide" id="rekapanSlide">
+      <div class="container">
+        <div class="form-kiri card">
+          <button class="btn tambah-saldo" onclick="openModal()">Tambah Saldo</button>
+          <input class="uppercase" type="text" id="namaNasabah" placeholder="NAMA NASABAH" />
+          <input class="uppercase" type="text" id="namaBank" placeholder="NAMA BANK" />
+          <select id="jenisTransaksi">
+            <option disabled selected>PILIH TRANSAKSI</option>
+            <option>TRANSFER</option>
+            <option>TARIK</option>
+          </select>
+          <input type="text" id="nominal" inputmode="numeric" placeholder="NOMINAL" />
+          <input type="text" id="admin" inputmode="numeric" placeholder="ADMIN" />
+          <input type="date" id="tanggal" />
+          <div class="form-buttons">
+          <button id="btnSimpan" onclick="simpanTransaksi()">Simpan Transaksi</button>
+          </div>
+        </div>
+
+        <div class="form-kanan card">
+          <table class="rekap">
+            <tr>
+              <th>TRANSFER (UANG MASUK)</th>
+              <th>TARIK (UANG KELUAR)</th>
+            </tr>
+            <tr>
+              <td id="transferMasuk">0</td>
+              <td id="tarikKeluar">0</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <h3 style="padding-left:18px;margin-top:6px;">RINGKASAN TRANSAKSI</h3>
+      <div style="overflow-x:auto; max-width:100%;">
+        <table class="tabel-transaksi" id="tabelTransaksi" style="width:100%; border-collapse:collapse; table-layout:fixed;">
+          <thead>
+            <tr>
+              <th style="width:40px;">No</th>
+              <th style="width:100px;">Tanggal</th>
+              <th style="width:150px;">Nama Nasabah</th>
+              <th style="width:120px;">Bank</th>
+              <th style="width:120px;">Transaksi</th>
+              <th style="width:100px;">Nominal</th>
+              <th style="width:80px;">Admin</th>
+              <th style="width:80px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyTransaksi"></tbody>
+        </table>
+      </div>
+
+      <table class="rekap" style="margin-top:6px;">
+        <tr>
+          <td><b>Total Admin</b></td>
+          <td id="totalAdmin">0</td>
+        </tr>
+      </table>
+
+      <div class="footer-buttons">
+        <button class="btn pdf" onclick="alert('Cetak PDF belum diaktifkan')">Cetak PDF</button>
+        <button class="btn excel" onclick="exportExcel()">Export Excel</button>
+        <button class="btn reset" onclick="resetData()">Reset</button>
+      </div>
+    </div>
+
+    <!-- MUTASI -->
+    <div class="slide" id="mutasiSlide">
+      <div class="container">
+        <div class="card">
+          <h3>Mutasi</h3>
+          <p>Filter berdasarkan tanggal atau jenis transaksi:</p>
+          <input type="date" id="filterStart" /> s/d <input type="date" id="filterEnd" />
+          <select id="filterJenis">
+            <option value="">Semua</option>
+            <option value="TRANSFER">TRANSFER</option>
+            <option value="TARIK">TARIK</option>
+          </select>
+          <button class="btn" onclick="filterMutasi()">Tampilkan</button>
+
+          <div style="overflow-x:auto; max-width:100%; margin-top:8px;">
+            <table class="tabel-transaksi" id="mutasiTable" style="width:100%; border-collapse:collapse; table-layout:fixed;">
+              <thead>
+                <tr>
+                  <th style="width:40px;">No</th>
+                  <th style="width:100px;">Tanggal</th>
+                  <th style="width:150px;">Nama</th>
+                  <th style="width:120px;">Bank</th>
+                  <th style="width:100px;">Jenis</th>
+                  <th style="width:120px;">Nominal</th>
+                  <th style="width:80px;">Admin</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyMutasi"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL TAMBAH SALDO -->
+    <div id="modalSaldo" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 style="margin:0">Tambah Saldo</h3>
+          <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        <input type="text" id="inputSaldoMesin" placeholder="SALDO MESIN"/>
+        <input type="text" id="inputUangTunai" placeholder="UANG TUNAI"/>
+        <button class="btn" style="margin-top:6px" onclick="tambahSaldo()">Simpan Saldo</button>
+      </div>
+    </div>
+
+    <!-- PAKET DATA -->
+    <div class="slide" id="paketDataSlide">
+      <div class="container">
+        <div class="form-kiri card">
+          <input type="text" id="pdNamaNasabah" placeholder="NAMA VOUCHER" class="uppercase"/>
+          <select id="pdOperator">
+            <option disabled selected>PILIH OPERATOR</option>
+            <option>TELKOMSEL</option>
+            <option>BYU</option>
+            <option>INDOSAT</option>
+            <option>AXIS</option>
+            <option>XL</option>
+            <option>SMARTFREN</option>
+            <option>TRI</option>
+          </select>
+          <input type="text" id="pdNominal" placeholder="HARGA"/>
+          <input type="text" id="pdAdmin" placeholder="BANYAKNYA"/>
+          <input type="date" id="pdTanggal"/>
+          <button class="btn" style="background:#0f52a8; color:#fff" onclick="simpanPaketData()">Simpan</button>
+        </div>
+
+        <div class="form-kanan card">
+          <div style="overflow-x:auto; max-width:100%;">
+            <table class="tabel-transaksi" id="tabelPaketData" style="width:100%; border-collapse: collapse; table-layout: fixed;">
+              <thead>
+                <tr>
+                  <th style="width:40px;">NO</th>
+                  <th style="width:120px;">TANGGAL</th>
+                  <th style="width:150px;">NAMA</th>
+                  <th style="width:120px;">OPERATOR</th>
+                  <th style="width:100px;">HARGA</th>
+                  <th style="width:100px;">BANYAKNYA</th>
+                  <th style="width:80px;">AKSI</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyPaketData"></tbody>
+            </table>
+          </div>
+
+          <h3 style="text-align:center; margin-top:15px;">Rekap Penjualan Paket Data</h3>
+          <div class="rekap-grid">
+            <div class="rekap-item telkomsel"><div class="rekap-title">TELKOMSEL</div><div class="rekap-count" id="countTELKOMSEL">0</div></div>
+            <div class="rekap-item byu"><div class="rekap-title">BYU</div><div class="rekap-count" id="countBYU">0</div></div>
+            <div class="rekap-item indosat"><div class="rekap-title">INDOSAT</div><div class="rekap-count" id="countINDOSAT">0</div></div>
+            <div class="rekap-item axis"><div class="rekap-title">AXIS</div><div class="rekap-count" id="countAXIS">0</div></div>
+            <div class="rekap-item xl"><div class="rekap-title">XL</div><div class="rekap-count" id="countXL">0</div></div>
+            <div class="rekap-item smartfren"><div class="rekap-title">SMARTFREN</div><div class="rekap-count" id="countSMARTFREN">0</div></div>
+            <div class="rekap-item tri"><div class="rekap-title">TRI</div><div class="rekap-count" id="countTRI">0</div></div>
+          </div>
+
+          <table class="rekap" style="margin-top:15px; width:100%;">
+            <tr>
+              <td><b>Total Nominal</b></td>
+              <td id="totalNominalPaket">0</td>
+            </tr>
+            <tr>
+              <td><b>Total Jumlah Paket</b></td>
+              <td id="totalJumlahPaket">0</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module">
+
+// =====================
+// 🔥 Firebase (RTDB)
+// =====================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-analytics.js";
+import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDsC-Cd5WH-ARCCY-oynM1I-1JZ3Ultt14",
+  authDomain: "inputanku.firebaseapp.com",
+  databaseURL: "https://inputanku-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "inputanku",
+  storageBucket: "inputanku.firebasestorage.app",
+  messagingSenderId: "671781513894",
+  appId: "1:671781513894:web:b0fe5812daec18aaece267",
+  measurementId: "G-PQRY1R4XHL"
+};
+const app = initializeApp(firebaseConfig);
+try { getAnalytics(app); } catch (e) { /* analytics optional on http */ }
+const db = getDatabase(app);
+
+// =====================
+// 📦 State di Frontend
+// =====================
+let transaksiCache = [];            // rekapan (RTDB: /transaksi)
+let dashboardCache = [];            // dashboard berjalan (RTDB: /dashboard)
+let paketCache = [];                // paket data (RTDB: /paketData)
+let saldo = { mesin:0, tunai:0 };  // saldo (RTDB: /saldo)
+const nf = new Intl.NumberFormat("id-ID");
+
+// =====================
+// 👤 Login & Akses (module mengisi __appLogin, wrapper global memanggilnya)
+// =====================
+window.__appLogin = function(){
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  if(!username || !password){ alert("Masukkan Username & Password!"); return; }
+  let role = "";
+  if(username.toLowerCase() === "owner" && password === "230323") role = "owner";
+  else if(password === "112233") role = "kasir";
+  else { alert("Username / Password salah!"); return; }
+
+  sessionStorage.setItem("role", role);
+  sessionStorage.setItem("username", username);
+  document.getElementById("kasirName").innerText = username.toUpperCase();
+  document.getElementById("loginSlide").style.display = "none";
+  document.getElementById("mainSlide").style.display = "block";
+  showSlide("dashboardSlide");
+  aturHakAkses();
+  // mulai subscribe realtime
+  subscribeAll();
+}
+
+window.logout = function(){
+  if(!confirm("Yakin ingin logout?")) return;
+  sessionStorage.clear();
+  document.querySelectorAll(".slide").forEach(s=>s.style.display="none");
+  const loginSlide = document.getElementById("loginSlide");
+  loginSlide.style.display = "flex";
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+}
+
+function aturHakAkses(){
+  const role = sessionStorage.getItem("role");
+  if(role === "kasir"){
+    const mutasiBtn = document.querySelector("button[onclick=\"showSlide('mutasiSlide')\"]");
+    if(mutasiBtn) mutasiBtn.style.display = "none";
+    const tutupBukuBtn = document.querySelector("button[onclick='tutupBuku()']");
+    if(tutupBukuBtn) tutupBukuBtn.style.display = "none";
+  }
+}
+
+// =====================
+// 🧭 Sidebar & Layout
+// =====================
+let sidebarOpen=false;
+const sidebar=document.getElementById("sidebar");
+const mainContent=document.getElementById("mainContent");
+const sideToggle=document.getElementById("sideToggle");
+sideToggle.onclick=function(){
+  sidebarOpen=!sidebarOpen;
+  if(sidebarOpen){ sidebar.style.left="0px"; mainContent.style.marginLeft="180px"; sideToggle.style.left="180px"; }
+  else { sidebar.style.left="-180px"; mainContent.style.marginLeft="0px"; sideToggle.style.left="0px"; }
+}
+window.toggleSubMenu = function(id){ const menu = document.getElementById(id); menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex'; }
+window.showSlide = function(id){ document.querySelectorAll(".slide").forEach(s=>s.style.display="none"); document.getElementById("mainSlide").style.display="block"; document.getElementById(id).style.display="block"; }
+
+// =====================
+// 🧮 Helper Angka
+// =====================
+function getNumber(id){ return parseInt(document.getElementById(id).value.replace(/\D/g,""))||0; }
+function formatInputAngka(id){ const el=document.getElementById(id); if(!el) return; el.addEventListener("input",function(){ let angka=this.value.replace(/\D/g,""); this.value=angka?nf.format(angka):""; }); }
+["nominal","admin","inputSaldoMesin","inputUangTunai"].forEach(formatInputAngka);
+
+// Rupiah untuk Paket Data
+function getNumberRupiahValue(v){return parseInt((v||"").replace(/\./g,""))||0}
+function formatInputRupiah(id){ const el=document.getElementById(id); if(!el) return; el.addEventListener("input",function(){ let angka=this.value.replace(/\D/g,""); this.value = angka ? angka.replace(/\B(?=(\d{3})+(?!\d))/g,".") : ""; }); }
+["pdNominal","pdAdmin"].forEach(formatInputRupiah);
+
+// =====================
+// 🪟 Modal Saldo
+// =====================
+window.openModal = ()=> document.getElementById("modalSaldo").style.display="block";
+window.closeModal = ()=> document.getElementById("modalSaldo").style.display="none";
+window.onclick = (e)=>{ if(e.target==document.getElementById("modalSaldo")) closeModal(); }
+
+// =====================
+// 🔄 Subscribe Realtime
+// =====================
+function subscribeAll(){
+  // transaksi rekapan
+  onValue(ref(db, 'transaksi'), (snap)=>{
+    const data = snap.val()||{}; 
+    transaksiCache = Object.entries(data).map(([id,v])=>({id, ...v})).sort((a,b)=> (a.tanggal||'').localeCompare(b.tanggal||''));
+    renderTabelTransaksi();
+    updateRekapTransaksi();
+    exportCacheForExcel = transaksiCache; // untuk export
+  });
+  // dashboard berjalan
+  onValue(ref(db, 'dashboard'), (snap)=>{
+    const data = snap.val()||{}; 
+    dashboardCache = Object.entries(data).map(([id,v])=>({id, ...v}));
+    updateDashboardFromCache();
+    updateChart();
+    updatePieChart();
+  });
+  // saldo
+  onValue(ref(db, 'saldo'), (snap)=>{
+    saldo = {mesin:0,tunai:0, ...(snap.val()||{})};
+    document.getElementById("saldoMesinHeader").innerText = nf.format(saldo.mesin||0);
+    document.getElementById("uangTunaiHeader").innerText = nf.format(saldo.tunai||0);
+  });
+  // paket data
+  onValue(ref(db, 'paketData'), (snap)=>{
+    const data = snap.val()||{};
+    paketCache = Object.entries(data).map(([id,v])=>({id, ...v}))
+                 .sort((a,b)=> (a.tanggal||'').localeCompare(b.tanggal||''));
+    renderTabelPaket();
+    updateRekapPaketFromCache();
+  });
+}
+
+// =====================
+// 💰 Tambah Saldo (RTDB: /saldo)
+// =====================
+window.tambahSaldo = async function(){
+  const sm=getNumber("inputSaldoMesin"), ut=getNumber("inputUangTunai");
+  const newSaldo = { mesin: (saldo.mesin||0) + sm, tunai: (saldo.tunai||0) + ut };
+  await set(ref(db, 'saldo'), newSaldo);
+  document.getElementById("inputSaldoMesin").value=""; document.getElementById("inputUangTunai").value="";
+  closeModal();
+}
+
+// =====================
+// Variabel Global
+// =====================
+let editMode = false;
+let editId = null;
+let editDataLama = null;
+
+// 🔹 Fungsi bantu: ambil angka dari input (hilangkan . atau ,)
+function getCleanNumber(id){
+  let val = document.getElementById(id).value;
+  if(!val) return 0;
+  val = val.replace(/\./g,'').replace(/,/g,''); // buang pemisah ribuan
+  return parseInt(val) || 0;
+}
+
+// =====================
+// 📝 Simpan Transaksi (rekapan + dashboard) & Hapus
+// =====================
+window.simpanTransaksi = async function(){
+  const nama  = document.getElementById("namaNasabah").value.trim().toUpperCase();
+  const bank  = document.getElementById("namaBank").value.trim().toUpperCase();
+  const jenis = document.getElementById("jenisTransaksi").value;
+
+  // parsing angka yang aman
+  const nominal = parseInt((document.getElementById("nominal").value || "").replace(/\D/g,"")) || 0;
+  const admin   = parseInt((document.getElementById("admin").value   || "").replace(/\D/g,"")) || 0;
+
+  const tanggal = document.getElementById("tanggal").value;
+
+  if(!nama || !bank || jenis==="PILIH TRANSAKSI" || !tanggal){
+    alert("Lengkapi semua data!");
+    return;
+  }
+
+  const payload = {
+    nama, bank, jenis, nominal, admin, tanggal,
+    createdAt: (editMode && editDataLama ? editDataLama.createdAt : Date.now())
+  };
+
+  if(editMode && editId && editDataLama){
+    // gunakan flow edit agar saldo di-rollback dulu
+    await editTransaksi(editId, 'transaksi', payload, editDataLama);
+    alert("Transaksi berhasil diperbarui!");
+    editMode = false; editId = null; editDataLama = null;
+    document.getElementById("btnSimpan").innerText = "Simpan Transaksi";
+  }else{
+    // HITUNG SALDO BARU (rumus konsisten)
+    let newSaldo = { ...saldo };
+    if(jenis === "TRANSFER"){
+      // Nasabah bayar nominal+admin ke kas, mesin mengirim nominal
+      newSaldo.mesin = (newSaldo.mesin||0) - nominal;
+      newSaldo.tunai = (newSaldo.tunai||0) + nominal + admin;
+    }else if(jenis === "TARIK"){
+      // Mesin terima nominal, kas keluar nominal, admin tambah kas
+      newSaldo.mesin = (newSaldo.mesin||0) + nominal;
+      newSaldo.tunai = (newSaldo.tunai||0) - nominal + admin;
+    }
+
+    const trRef   = push(ref(db, 'transaksi'));
+    const dashRef = push(ref(db, 'dashboard'));
+    await Promise.all([
+      set(trRef, payload),
+      set(dashRef, payload),
+      set(ref(db, 'saldo'), newSaldo)
+    ]);
+
+    alert("Transaksi berhasil disimpan!");
+  }
+
+  // ✅ reset form HARUS di dalam fungsi (jangan di luar)
+  document.getElementById("namaNasabah").value = "";
+  document.getElementById("namaBank").value    = "";
+  document.getElementById("jenisTransaksi").selectedIndex = 0;
+  document.getElementById("nominal").value     = "";
+  document.getElementById("admin").value       = "";
+};
+
+window.hapusTransaksi = async function(id, scope){
+  // scope: 'transaksi' atau 'dashboard'
+  await remove(ref(db, `${scope}/${id}`));
+}
+
+// =====================
+// Edit Transaksi (update saldo & data)
+// =====================
+window.editTransaksi = async function(id, scope, dataBaru, dataLama){
+  let newSaldo = { ...saldo };
+
+  // ---- ROLLBACK efek data lama ----
+  if(dataLama.jenis === "TRANSFER"){
+    // Lama: mesin - nominal, tunai + (nominal + admin)
+    newSaldo.mesin = (newSaldo.mesin||0) + (dataLama.nominal||0);
+    newSaldo.tunai = (newSaldo.tunai||0) - (dataLama.nominal||0) - (dataLama.admin||0);
+  }else if(dataLama.jenis === "TARIK"){
+    // Lama: mesin + nominal, tunai - nominal + admin
+    newSaldo.mesin = (newSaldo.mesin||0) - (dataLama.nominal||0);
+    newSaldo.tunai = (newSaldo.tunai||0) + (dataLama.nominal||0) - (dataLama.admin||0);
+  }
+
+  // ---- APPLY efek data baru ----
+  if(dataBaru.jenis === "TRANSFER"){
+    newSaldo.mesin = (newSaldo.mesin||0) - (dataBaru.nominal||0);
+    newSaldo.tunai = (newSaldo.tunai||0) + (dataBaru.nominal||0) + (dataBaru.admin||0);
+  }else if(dataBaru.jenis === "TARIK"){
+    newSaldo.mesin = (newSaldo.mesin||0) + (dataBaru.nominal||0);
+    newSaldo.tunai = (newSaldo.tunai||0) - (dataBaru.nominal||0) + (dataBaru.admin||0);
+  }
+
+  // update transaksi + saldo
+  const ops = [
+    set(ref(db, `${scope}/${id}`), dataBaru),
+    set(ref(db, 'saldo'), newSaldo)
+  ];
+
+  // sinkronkan /dashboard berdasarkan createdAt yang sama
+  const matchDash = (dashboardCache||[]).filter(d => d.createdAt === dataLama.createdAt);
+  matchDash.forEach(d => ops.push(set(ref(db, `dashboard/${d.id}`), dataBaru)));
+
+  await Promise.all(ops);
+};
+
+// =====================
+// Render Tabel
+// =====================
+function renderTabelTransaksi(){
+  const tbody=document.getElementById("tbodyTransaksi");
+  tbody.innerHTML="";
+  transaksiCache.forEach((t,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${t.tanggal||''}</td>
+      <td>${t.nama||''}</td>
+      <td>${t.bank||''}</td>
+      <td>${t.jenis||''}</td>
+      <td>${t.nominal||0}</td>
+      <td>${t.admin||0}</td>
+      <td>
+        <button onclick='showEditForm("${t.id}")'>Edit</button>
+        <button onclick="hapusTransaksi('${t.id}','transaksi')">Hapus</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// EDIT FORM
+// =====================
+window.showEditForm = function(id){
+  const transaksi = transaksiCache.find(x => x.id === id);
+  if(!transaksi) return;
+
+  document.getElementById("namaNasabah").value = transaksi.nama || "";
+  document.getElementById("namaBank").value    = transaksi.bank || "";
+  document.getElementById("jenisTransaksi").value = transaksi.jenis || "PILIH TRANSAKSI";
+  document.getElementById("nominal").value     = transaksi.nominal || 0;
+  document.getElementById("admin").value       = transaksi.admin || 0;
+  document.getElementById("tanggal").value     = transaksi.tanggal || "";
+
+  editMode    = true;
+  editId      = id;
+  editDataLama= transaksi;
+  document.getElementById("btnSimpan").innerText = "Update Transaksi";
+};
+
+
+function updateRekapTransaksi(){
+  let totalTransfer=0,totalTarik=0,totalAdmin=0;
+  transaksiCache.forEach(t=>{ if(t.jenis==="TRANSFER") totalTransfer+=(t.nominal||0); if(t.jenis==="TARIK") totalTarik+=(t.nominal||0); totalAdmin+=(t.admin||0); });
+  document.getElementById("transferMasuk").innerText=nf.format(totalTransfer);
+  document.getElementById("tarikKeluar").innerText=nf.format(totalTarik);
+  document.getElementById("totalAdmin").innerText=nf.format(totalAdmin);
+}
+
+// =====================
+// 📈 Dashboard (dari /dashboard)
+// =====================
+function updateDashboardFromCache(){
+  let totalTransaksi=0,totalAdmin=0;
+  dashboardCache.forEach(t=>{ totalTransaksi+=t.nominal||0; totalAdmin+=(t.admin||0); });
+  document.getElementById("dashTransaksiCards").innerText=nf.format(totalTransaksi);
+  document.getElementById("dashAdminCards").innerText=nf.format(totalAdmin);
+}
+
+// Chart Bar Bulanan
+const ctx = document.getElementById("chartTransaksi").getContext("2d");
+let chart = new Chart(ctx, { type: "bar", data: { labels: ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"], datasets: [{ label: "Nominal Transaksi", data: Array(12).fill(0), backgroundColor: "rgba(0,99,102,0.7)" }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+function updateChart(){
+  let bulan = Array(12).fill(0);
+  const now = new Date();
+  dashboardCache.forEach(t=>{ const d = new Date(t.tanggal||"1970-01-01"); if(d.getFullYear()=== now.getFullYear()) bulan[d.getMonth()] += (t.nominal||0); });
+  chart.data.datasets[0].data = bulan; chart.update();
+}
+
+// Chart Pie Transfer vs Tarik
+const ctxPie = document.getElementById("chartPieTransaksi").getContext("2d");
+let pieChart = new Chart(ctxPie, { type: "pie", data: { labels: ["TRANSFER", "TARIK"], datasets: [{ label: "Persentase", data: [0,0], backgroundColor: ["#228B22","#B22222"] }] }, options: { responsive:true, plugins:{ legend:{position:'bottom'} } } });
+function updatePieChart(){ let cT=0, cW=0; dashboardCache.forEach(t=>{ if(t.jenis==="TRANSFER") cT++; if(t.jenis==="TARIK") cW++; }); pieChart.data.datasets[0].data=[cT,cW]; pieChart.update(); }
+
+// =====================
+// 🧾 Mutasi (dari /dashboard)
+// =====================
+window.filterMutasi = function(){
+  let start=document.getElementById("filterStart").value;
+  let end=document.getElementById("filterEnd").value;
+  let jenis=document.getElementById("filterJenis").value;
+  const tbody=document.getElementById("tbodyMutasi"); tbody.innerHTML="";
+  let list = dashboardCache.filter(t=> (!start || (t.tanggal||'')>=start) && (!end || (t.tanggal||'')<=end) && (!jenis || t.jenis===jenis));
+  list.sort((a,b)=> (a.tanggal||'').localeCompare(b.tanggal||''));
+  list.forEach((t,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = `<td>${i+1}</td><td>${t.tanggal||''}</td><td>${t.nama||''}</td><td>${t.bank||''}</td><td>${t.jenis||''}</td><td>${nf.format(t.nominal||0)}</td><td>${nf.format(t.admin||0)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// =====================
+// 🧹 Reset & Tutup Buku
+// =====================
+window.resetData = async function(){
+  if(!confirm("Yakin ingin reset rekap transaksi dan saldo? Dashboard tetap menampilkan total sebelumnya.")) return;
+  await Promise.all([
+    remove(ref(db,'transaksi')),
+    set(ref(db,'saldo'), {mesin:0,tunai:0})
+  ]);
+  alert("Data transaksi & saldo direset. Dashboard tidak berubah.");
+}
+
+window.tutupBuku = async function(){
+  if(!confirm("Yakin ingin menutup buku? Semua total di dashboard akan di-reset.")) return;
+  await Promise.all([
+    remove(ref(db,'dashboard')),
+    set(ref(db,'saldo'), {mesin:0,tunai:0})
+  ]);
+  alert("Dashboard berhasil di-reset!");
+}
+
+// =====================
+// 📦 Paket Data (RTDB: /paketData)
+// =====================
+window.simpanPaketData = async function(){
+  let nama = document.getElementById("pdNamaNasabah").value.trim();
+  let operator = document.getElementById("pdOperator").value;
+  let harga = getNumberRupiahValue(document.getElementById("pdNominal").value.trim());
+  let banyaknya = parseInt((document.getElementById("pdAdmin").value||'').replace(/\D/g,''))||0;
+  let tanggal = document.getElementById("pdTanggal").value; // yyyy-mm-dd
+
+  if(!nama || !operator || operator==="PILIH OPERATOR" || !harga || !banyaknya || !tanggal){ alert("Lengkapi semua field!"); return; }
+  const payload = { nama:nama.toUpperCase(), operator, harga, banyaknya, tanggal, createdAt: Date.now() };
+  await set(push(ref(db,'paketData')), payload);
+  // reset input kecuali tanggal
+  document.getElementById("pdNamaNasabah").value="";
+  document.getElementById("pdOperator").selectedIndex=0;
+  document.getElementById("pdNominal").value="";
+  document.getElementById("pdAdmin").value="";
+}
+
+window.hapusPaketData = async function(id){ await remove(ref(db, `paketData/${id}`)); }
+
+function renderTabelPaket(){
+  const tbody = document.getElementById("tbodyPaketData");
+  tbody.innerHTML="";
+  paketCache.forEach((item, idx)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td>${(item.tanggal||'')}</td>
+      <td>${(item.nama||'')}</td>
+      <td>${(item.operator||'')}</td>
+      <td>${nf.format(item.harga||0)}</td>
+      <td>${(item.banyaknya||0)}</td>
+      <td><button class="btn" onclick="hapusPaketData('${item.id}')">Hapus</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateRekapPaketFromCache(){
+  const ops = ["TELKOMSEL","BYU","INDOSAT","AXIS","XL","SMARTFREN","TRI"];
+  let totalNominal=0, totalJumlah=0, mapCount={}; ops.forEach(o=>mapCount[o]=0);
+  paketCache.forEach(p=>{ mapCount[p.operator] = (mapCount[p.operator]||0) + (p.banyaknya||0); totalJumlah += (p.banyaknya||0); totalNominal += (p.harga||0) * (p.banyaknya||0); });
+  ops.forEach(o=>{ const el=document.getElementById("count"+o); if(el) el.innerText = nf.format(mapCount[o]||0); });
+  document.getElementById("totalNominalPaket").innerText = nf.format(totalNominal);
+  document.getElementById("totalJumlahPaket").innerText = nf.format(totalJumlah);
+}
+
+// =====================
+// 📤 Export Excel (dari cache rekapan transaksi)
+// =====================
+let exportCacheForExcel = [];
+window.exportExcel = function(){
+  const wb = XLSX.utils.book_new();
+  const rows = exportCacheForExcel.map((t,i)=>({ No:i+1, Tanggal:t.tanggal, Nama:t.nama, Bank:t.bank, Jenis:t.jenis, Nominal:t.nominal, Admin:t.admin }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, "Transaksi");
+  XLSX.writeFile(wb, "Transaksi.xlsx");
+}
+
+// menandai app siap (untuk test kecil di bawah)
+window.__appReady = true;
+</script>
+
+<!-- 🧪 Mini self-test (membantu debugging di console) -->
+<script>
+(function(){
+  function ok(cond, msg){ if(!cond){ console.error('TEST FAIL:', msg);} else { console.log('TEST OK:', msg);} }
+  function whenReady(cb){ if(window.__appReady) return cb(); setTimeout(()=>whenReady(cb), 50); }
+  whenReady(function(){
+    ok(typeof login === 'function', 'Global login wrapper tersedia');
+    ok(typeof window.__appLogin === 'function', 'Handler login dari module tersedia');
+    ok(typeof showSlide === 'function', 'showSlide tersedia');
+    ok(document.getElementById('loginSlide'), 'loginSlide ada di DOM');
+    ok(document.getElementById('mainSlide'), 'mainSlide ada di DOM');
+  });
+})();
+
+</script>
+
+</body>
+</html>
